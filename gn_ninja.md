@@ -196,16 +196,52 @@ cd ~/build_training/day2
 ## 2️⃣ 创建 .gn 文件
 
 ```gn
-buildconfig = "//BUILD.gn"
+buildconfig = "//BUILDCONFIG.gn"
 ```
 
 解释：
 - 告诉 GN 默认配置文件位置
 
+## 2️⃣ 创建 BUILDCONFIG.gn 文件
+```gn
+set_default_toolchain("//:default")
+```
+GN 会：
+查找 label //:default
+加载 BUILD.gn
+找到：toolchain("default") { ... }, 初始化该 toolchain,
+把 executable("app") 绑定到这个 toolchain
+
 
 ## 3️⃣ 创建 BUILD.gn
 
 ```gn
+toolchain("default") {
+
+  toolchain_args = {
+    current_os = host_os
+    current_cpu = host_cpu
+  }
+
+  tool("cc") {
+    command = "clang -c {{source}} -o {{output}}"
+    outputs = [ "{{source_out_dir}}/{{source_name_part}}.o" ]
+    default_output_extension = ".o"
+  }
+
+  tool("cxx") {
+    command = "clang++ -c {{source}} -o {{output}}"
+    outputs = [ "{{source_out_dir}}/{{source_name_part}}.o" ]
+    default_output_extension = ".o"
+  }
+
+  tool("link") {
+    command = "clang++ {{inputs}} -o {{output}}"
+    outputs = [ "{{root_out_dir}}/{{target_output_name}}" ]
+    default_output_dir = "{{root_out_dir}}"
+  }
+}
+
 executable("app") {
   sources = [ "main.cpp" ]
 }
