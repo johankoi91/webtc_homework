@@ -164,6 +164,14 @@ DAY 2 —— 引入 GN（规则生成层）
 
 ```bash
 brew install gn
+
+或者二进制方式：
+curl -L "https://chrome-infra-packages.appspot.com/dl/gn/gn/mac-amd64/+/latest" \
+  -o gn.zip
+unzip gn.zip -d /tmp/gn-bin
+sudo mv /tmp/gn-bin/gn /usr/local/bin/gn
+sudo chmod +x /usr/local/bin/gn
+
 ```
 
 验证：
