@@ -247,10 +247,42 @@ executable("app") {
 }
 ```
 
-解释：
-- executable = 生成可执行文件
-- "app" = target 名称
-- sources = 编译源文件列表
+substitution 变量系统
+在 tool() 里：
+
+command = "clang++ {{inputs}} -o {{output}}"
+
+{{xxx}} 是 GN 的 substitution pattern。
+
+它们不是普通变量，而是：
+
+由 GN 在生成 build.ninja 阶段替换
+
+你当前用到的：
+substitution	含义
+{{source}}	当前源文件
+{{inputs}}	所有输入文件
+{{output}}	当前输出文件
+{{source_name_part}}	文件名不带扩展名
+{{source_out_dir}}	对应 obj 目录
+{{root_out_dir}}	out 目录
+{{target_output_name}}	目标名
+
+曾经出现：
+clang++ obj/main.o -o /app
+
+原因是：
+自定义 toolchain
+没定义 default_output_dir
+GN 无法推导输出目录，fallback 成 /
+
+现在写：
+outputs = [ "{{root_out_dir}}/{{target_output_name}}" ]
+default_output_dir = "{{root_out_dir}}"
+GN 会把：
+root_out_dir = out
+所以生成：
+out/app
 
 
 ## 4️⃣ 创建 main.cpp
@@ -297,6 +329,39 @@ ninja -C out
 ./out/app
 ```
 
+这份 BUILD.gn 的真实执行链
+
+当你执行：
+
+gn gen out
+
+GN 做的事情：
+
+解析 toolchain
+
+解析 executable
+
+计算 app 的输出：
+
+root_out_dir = out
+target_output_name = app
+=> out/app
+
+写入 build.ninja
+
+当你执行：
+
+ninja -C out
+
+执行链：
+
+main.cpp
+   ↓ cxx tool
+obj/main.o
+   ↓ link tool
+out/app
+
+完全由你定义的 toolchain 控制。
 
 --------------------------------------------------
 第三部分：静态库拆分（2 小时）
