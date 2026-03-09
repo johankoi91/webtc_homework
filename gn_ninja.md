@@ -393,9 +393,16 @@ int main() {
 ```
 
 
-修改 BUILD.gn
+修改 BUILD.gn，增加以下内容
 
 ```gn
+tool("alink") {
+    command = "ar rcs {{output}} {{inputs}}"
+    outputs = [ "{{root_out_dir}}/lib{{target_output_name}}.a" ]
+    default_output_extension = ".a"
+    default_output_dir = "{{root_out_dir}}"
+}
+
 static_library("hello_lib") {
   sources = [ "hello.cpp" ]
 }
@@ -414,6 +421,38 @@ static_library
 :hello_lib
 - 当前目录 target
 
+
+static_library 这种 target 类型 必须使用 alink tool，
+
+GN 的 target → tool 对应关系
+
+GN 内部每种 target 类型都会映射到特定 tool。
+
+常见映射：
+
+target	使用 tool
+executable	link
+static_library	alink
+shared_library	solink
+source 编译	cc / cxx
+group	stamp
+
+这里有个很重要的 GN 架构思想
+GN 不是根据 target 类型自动生成规则。
+而是：
+
+target type
+      ↓
+tool name
+      ↓
+toolchain 里的 tool()
+
+也就是说：
+static_library → alink
+shared_library → solink
+executable → link
+
+这些 必须在 toolchain 定义。
 
 重新生成：
 
