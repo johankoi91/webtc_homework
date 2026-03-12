@@ -1,0 +1,9 @@
+executable("app") {
+  sources = [
+    "main.cpp",
+  ]
+
+  deps = [
+    "//hello:hello_lib",
+  ]
+}

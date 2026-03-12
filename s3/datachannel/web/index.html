@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>WebRTC DataChannel Demo</title>
+</head>
+
+<body>
+
+<h2>WebRTC DataChannel Web Client</h2>
+
+<button onclick="connect()">Connect</button>
+<button onclick="sendMsg()">Send</button>
+
+<br><br>
+
+<textarea id="log" rows="20" cols="80"></textarea>
+
+<script>
+
+let pc
+let dc
+let ws
+
+function log(msg){
+    const el = document.getElementById("log")
+    el.value += msg + "\n"
+}
+
+function connect(){
+    ws = new WebSocket("ws://localhost:9000")
+
+    ws.onopen = ()=>{
+        log("signal connected")
+        startPeer()
+    }
+
+    ws.onmessage = async (event)=>{
+        let text
+        if (event.data instanceof Blob) {
+            text = await event.data.text()
+         } else {
+            text = event.data
+        }
+
+    const msg = JSON.parse(text)
+
+    console.log("onmessage--",msg);
+        if (msg.type === "offer"){
+            log("recv offer")
+            await pc.setRemoteDescription(msg)
+
+            const answer = await pc.createAnswer()
+            await pc.setLocalDescription(answer)
+
+            ws.send(JSON.stringify(answer))
+        }
+
+        if (msg.type === "candidate"){
+            log("recv candidate")
+            await pc.addIceCandidate(msg.candidate)
+        }
+    }
+}
+
+function startPeer() {
+    pc = new RTCPeerConnection({
+        iceServers:[
+            {urls:"stun:stun.l.google.com:19302"}
+        ]
+    })
+
+    pc.onicecandidate = (event)=>{
+        if(event.candidate){
+            ws.send(JSON.stringify({
+                type:"candidate",
+                candidate:event.candidate
+            }))
+        }
+    }
+
+    pc.ondatachannel = (event)=>{
+        log("datachannel received")
+        dc = event.channel
+        setupChannel()
+    }
+}
+
+function setupChannel(){
+    dc.onopen = ()=>{
+        log("datachannel open")
+    }
+
+    dc.onmessage = (e)=>{
+        log("recv: " + e.data)
+    }
+
+    dc.onclose = ()=>{
+        log("datachannel closed")
+    }
+}
+
+function sendMsg(){
+    if(dc && dc.readyState === "open"){
+        dc.send("hello from web")
+        log("send hello")
+    }
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,19 @@
+config("hello_config") {
+  include_dirs = [ "." ]
+}
+
+static_library("hello_lib") {
+  sources = [
+    "hello.cpp",
+  ]
+
+  public = [
+    "hello.h",
+  ]
+
+  deps = [
+    "//util:util_lib",
+  ]
+
+  public_configs = [ ":hello_config" ]
+}

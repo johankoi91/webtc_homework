@@ -1,0 +1,13 @@
+ config("util_config") {
+  include_dirs = [ "." ]
+}
+
+static_library("util_lib") {
+  sources = [
+    "util.cpp",
+  ]
+
+  public = [ "util.h" ]
+
+  public_configs = [ ":util_config" ]
+}

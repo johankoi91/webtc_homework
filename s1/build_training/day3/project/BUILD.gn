@@ -1,0 +1,36 @@
+
+toolchain("default") {
+
+  toolchain_args = {
+    current_os = host_os
+    current_cpu = host_cpu
+  }
+
+  tool("cc") {
+    command = "clang -c {{source}} {{defines}} {{include_dirs}} {{cflags}} -o {{output}}"
+    outputs = [ "{{source_out_dir}}/{{source_name_part}}.o" ]
+  }
+
+  tool("cxx") {
+    command = "clang++ -c {{source}} {{defines}} {{include_dirs}} {{cflags_cc}} -o {{output}}"
+    outputs = [ "{{source_out_dir}}/{{source_name_part}}.o" ]
+  }
+
+  tool("alink") {
+    command = "ar rcs {{output}} {{inputs}}"
+    outputs = [ "{{root_out_dir}}/lib{{target_output_name}}.a" ]
+    default_output_dir = "{{root_out_dir}}"
+  }
+
+  tool("link") {
+    command = "clang++ {{inputs}} -o {{output}}"
+    outputs = [ "{{root_out_dir}}/{{target_output_name}}" ]
+    default_output_dir = "{{root_out_dir}}"
+  }
+}
+
+group("default") {
+  deps = [
+    "//app:app",
+  ]
+}

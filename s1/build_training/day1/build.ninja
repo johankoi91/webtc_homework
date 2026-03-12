@@ -1,0 +1,5 @@
+rule cxx
+  command = clang++ $in -std=c++17 -o $out
+  description = Compiling $in
+
+build app: cxx main.cpp hello.cpp
