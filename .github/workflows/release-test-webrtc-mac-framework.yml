@@ -1,0 +1,191 @@
+name: Release macOS bundle
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version number, with or without leading v
+        required: true
+        type: string
+      create_tag:
+        description: Create and push the tag before publishing
+        required: true
+        default: true
+        type: boolean
+      draft:
+        description: Publish as a draft release
+        required: true
+        default: false
+        type: boolean
+      prerelease:
+        description: Mark release as prerelease
+        required: true
+        default: false
+        type: boolean
+      notarize:
+        description: Sign and notarize when secrets are configured
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-test-webrtc-mac-framework-${{ github.ref || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: macos-15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve release metadata
+        id: meta
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
+            tag="${GITHUB_REF_NAME}"
+            draft="false"
+            prerelease="false"
+            notarize="true"
+          else
+            raw_version="${{ inputs.version }}"
+            normalized="${raw_version#v}"
+            tag="v${normalized}"
+            draft="${{ inputs.draft }}"
+            prerelease="${{ inputs.prerelease }}"
+            notarize="${{ inputs.notarize }}"
+          fi
+          version="${tag#v}"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "release_name=test_webrtc_mac_framework v$version" >> "$GITHUB_OUTPUT"
+          echo "draft=$draft" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$prerelease" >> "$GITHUB_OUTPUT"
+          echo "notarize=$notarize" >> "$GITHUB_OUTPUT"
+
+      - name: Create tag from workflow input
+        if: github.event_name == 'workflow_dispatch' && inputs.create_tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="${{ steps.meta.outputs.tag }}"
+          if git rev-parse "$tag" >/dev/null 2>&1; then
+            echo "Tag $tag already exists locally"
+          else
+            git tag "$tag"
+          fi
+          if git ls-remote --tags origin | grep -q "refs/tags/$tag$"; then
+            echo "Tag $tag already exists on origin"
+          else
+            git push origin "$tag"
+          fi
+
+      - name: Verify release tag exists
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="${{ steps.meta.outputs.tag }}"
+          git fetch --tags --force
+          git rev-parse "$tag" >/dev/null 2>&1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: src/s2-prj3-file-trans/test_webrtc_mac_framework/package-lock.json
+
+      - name: Decide signing mode
+        id: signing
+        shell: bash
+        env:
+          HAS_CERT: ${{ secrets.MACOS_CERTIFICATE_P12_BASE64 != '' }}
+          HAS_CERT_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD != '' }}
+          HAS_CERT_NAME: ${{ secrets.MACOS_CERTIFICATE_NAME != '' }}
+          HAS_APPLE_ID: ${{ secrets.APPLE_ID != '' }}
+          HAS_APPLE_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD != '' }}
+          HAS_APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID != '' }}
+        run: |
+          set -euo pipefail
+          enable_codesign="false"
+          enable_notarization="false"
+
+          if [[ "$HAS_CERT" == "true" && "$HAS_CERT_PASSWORD" == "true" && "$HAS_CERT_NAME" == "true" ]]; then
+            enable_codesign="true"
+          fi
+
+          if [[ "$enable_codesign" == "true" && "${{ steps.meta.outputs.notarize }}" == "true" && "$HAS_APPLE_ID" == "true" && "$HAS_APPLE_PASSWORD" == "true" && "$HAS_APPLE_TEAM_ID" == "true" ]]; then
+            enable_notarization="true"
+          fi
+
+          echo "enable_codesign=$enable_codesign" >> "$GITHUB_OUTPUT"
+          echo "enable_notarization=$enable_notarization" >> "$GITHUB_OUTPUT"
+
+      - name: Import Developer ID certificate
+        if: steps.signing.outputs.enable_codesign == 'true'
+        shell: bash
+        env:
+          CERTIFICATE_P12_BASE64: ${{ secrets.MACOS_CERTIFICATE_P12_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          KEYCHAIN_PATH="$RUNNER_TEMP/release-signing.keychain-db"
+          KEYCHAIN_PASSWORD="$(uuidgen)"
+          CERTIFICATE_PATH="$RUNNER_TEMP/release-signing.p12"
+
+          echo "$CERTIFICATE_P12_BASE64" | base64 --decode > "$CERTIFICATE_PATH"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERTIFICATE_PATH" -k "$KEYCHAIN_PATH" -P "$CERTIFICATE_PASSWORD" -T /usr/bin/codesign -T /usr/bin/security
+          security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | tr -d '"')
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+      - name: Package release bundle
+        working-directory: src/s2-prj3-file-trans/test_webrtc_mac_framework
+        env:
+          ENABLE_CODESIGN: ${{ steps.signing.outputs.enable_codesign }}
+          ENABLE_NOTARIZATION: ${{ steps.signing.outputs.enable_notarization }}
+          MACOS_CERTIFICATE_NAME: ${{ secrets.MACOS_CERTIFICATE_NAME }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: bash ./scripts/package-release.sh "${{ steps.meta.outputs.tag }}"
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: test_webrtc_mac_framework-${{ steps.meta.outputs.tag }}
+          path: |
+            src/s2-prj3-file-trans/test_webrtc_mac_framework/dist/release/*.zip
+            src/s2-prj3-file-trans/test_webrtc_mac_framework/dist/release/*.sha256
+
+      - name: Publish GitHub Release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: ${{ steps.meta.outputs.release_name }}
+          draft: ${{ steps.meta.outputs.draft }}
+          prerelease: ${{ steps.meta.outputs.prerelease }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            src/s2-prj3-file-trans/test_webrtc_mac_framework/dist/release/*.zip
+            src/s2-prj3-file-trans/test_webrtc_mac_framework/dist/release/*.sha256
+
+      - name: Remove temporary signing keychain
+        if: always() && steps.signing.outputs.enable_codesign == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          security delete-keychain "$RUNNER_TEMP/release-signing.keychain-db" || true

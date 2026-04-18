@@ -1,4 +1,10 @@
 {
+  "name": "test_webrtc_mac_framework",
+  "private": true,
+  "scripts": {
+    "signaling:start": "node signaling-server.js",
+    "release:package": "bash ./scripts/package-release.sh"
+  },
   "dependencies": {
     "ws": "^8.19.0"
   }
