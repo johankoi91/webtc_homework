@@ -1,0 +1,52 @@
+---
+description: WebRTC PeerConnection setup conventions (macOS) with DTLS/SRTP security defaults
+alwaysApply: true
+---
+
+# WebRTC PeerConnection conventions (macOS)
+
+## Security baseline (DTLS/SRTP)
+- ✅ **Always use DTLS/SRTP** for media + data. Reject any attempt to disable DTLS or SRTP (no “insecure mode” toggles).
+- ✅ Treat DTLS/SRTP as a **hard requirement**, not an optimization: if the runtime cannot negotiate DTLS/SRTP, fail the connection setup with a clear error.
+- ❌ Do not add configuration flags that silently downgrade security for “debugging”.
+
+## PeerConnection setup checklist
+- **MUST**: create `RTCPeerConnection` with explicit `RTCConfiguration` (don’t rely on implicit defaults).
+- **MUST**: set `iceServers` explicitly (even if only STUN) and validate URL schemes (`stun:`, `turn:`, `turns:`).
+- **PREFER**: create data channels with an explicit `RTCDataChannelConfiguration` and document reliability/ordering expectations.
+- **DO NOT** expose every `RTCConfiguration` knob in public APIs. Expose a narrow, safe surface; keep advanced fields internal.
+
+## Wrapper ↔ core boundary
+- **Wrapper layer (ObjC/Swift API)**: validate user input, enforce security defaults, and produce user-facing errors.
+- **Core layer (C++/lower-level WebRTC wiring)**: apply already-validated config; treat missing/unsafe config as programmer error.
+
+## Examples
+
+### ObjC wrapper (enforce secure defaults early)
+```objc
+RTCConfiguration *config = [[RTCConfiguration alloc] init];
+config.iceServers = @[ [[RTCIceServer alloc] initWithURLStrings:@[@"stun:stun.l.google.com:19302"]] ];
+
+// ✅ Create PeerConnection with explicit config
+RTCPeerConnection *pc = [factory peerConnectionWithConfiguration:config
+                                                     constraints:nil
+                                                        delegate:self];
+
+// ✅ Create DataChannel explicitly (no insecure toggles)
+RTCDataChannelConfiguration *dcConfig = [[RTCDataChannelConfiguration alloc] init];
+RTCDataChannel *dc = [pc dataChannelForLabel:@"file" configuration:dcConfig];
+```
+
+### C++ core (reject insecure policy if ever introduced)
+```cpp
+webrtc::PeerConnectionInterface::RTCConfiguration cfg;
+// cfg.servers = ... (validated by wrapper)
+
+// ✅ DTLS/SRTP required. If a product requirement ever adds a flag here,
+// enforce: "secure only" and fail closed on mismatch.
+// (Exact field names vary by WebRTC revision; keep the invariant.)
+CHECK(IsDtlsSrtpEnabled(cfg)) << "DTLS/SRTP must be enabled";
+
+auto pc = factory->CreatePeerConnectionOrError(cfg, constraints, observer);
+if (!pc.ok()) { return pc.error(); }
+```
