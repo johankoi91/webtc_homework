@@ -8,6 +8,8 @@ CONFIGURATION="Release"
 BUILD_DIR="$ROOT_DIR/dist/build"
 STAGE_DIR="$ROOT_DIR/dist/stage"
 RELEASE_DIR="$ROOT_DIR/dist/release"
+DMG_DIR="$ROOT_DIR/dist/dmg"
+DMG_MOUNT_DIR="$ROOT_DIR/dist/dmg-mount"
 SIGNALING_DIR="$STAGE_DIR/signaling-server"
 APP_NAME="test_webrtc_mac_framework.app"
 APP_PATH="$STAGE_DIR/$APP_NAME"
@@ -20,10 +22,18 @@ if [[ -z "$TAG" ]]; then
 fi
 
 VERSION="${TAG#v}"
-ZIP_BASENAME="test_webrtc_mac_framework-${VERSION}-macos"
-ZIP_PATH="$RELEASE_DIR/$ZIP_BASENAME.zip"
-CHECKSUM_PATH="$RELEASE_DIR/$ZIP_BASENAME.sha256"
-NOTARIZATION_ZIP_PATH="$RELEASE_DIR/$ZIP_BASENAME-notarization.zip"
+ARTIFACT_BASENAME="test_webrtc_mac_framework-${VERSION}-macos"
+ZIP_PATH="$RELEASE_DIR/$ARTIFACT_BASENAME.zip"
+ZIP_CHECKSUM_PATH="$RELEASE_DIR/$ARTIFACT_BASENAME.zip.sha256"
+DMG_PATH="$RELEASE_DIR/$ARTIFACT_BASENAME.dmg"
+DMG_TEMP_PATH="$RELEASE_DIR/$ARTIFACT_BASENAME-temp.dmg"
+DMG_CHECKSUM_PATH="$RELEASE_DIR/$ARTIFACT_BASENAME.dmg.sha256"
+NOTARIZATION_ZIP_PATH="$RELEASE_DIR/$ARTIFACT_BASENAME-notarization.zip"
+DMG_VOLUME_NAME="test_webrtc_mac_framework ${VERSION}"
+DMG_BACKGROUND_DIR="$DMG_DIR/.background"
+DMG_BACKGROUND_PPM="$DMG_BACKGROUND_DIR/background.ppm"
+DMG_BACKGROUND_PNG="$DMG_BACKGROUND_DIR/background.png"
+APPLICATIONS_SYMLINK="$DMG_DIR/Applications"
 
 ENABLE_CODESIGN="${ENABLE_CODESIGN:-false}"
 ENABLE_NOTARIZATION="${ENABLE_NOTARIZATION:-false}"
@@ -31,6 +41,7 @@ MACOS_CERTIFICATE_NAME="${MACOS_CERTIFICATE_NAME:-}"
 APPLE_ID="${APPLE_ID:-}"
 APPLE_APP_SPECIFIC_PASSWORD="${APPLE_APP_SPECIFIC_PASSWORD:-}"
 APPLE_TEAM_ID="${APPLE_TEAM_ID:-}"
+DMG_CUSTOMIZED="false"
 
 require_command() {
   if ! command -v "$1" >/dev/null 2>&1; then
@@ -47,6 +58,16 @@ require_env() {
     exit 1
   fi
 }
+
+cleanup() {
+  if [[ -d "$DMG_MOUNT_DIR" ]] && mount | grep -q "on $DMG_MOUNT_DIR "; then
+    hdiutil detach "$DMG_MOUNT_DIR" -quiet || true
+  fi
+  rm -rf "$DMG_MOUNT_DIR"
+  rm -f "$DMG_TEMP_PATH"
+}
+
+trap cleanup EXIT
 
 codesign_app() {
   require_env MACOS_CERTIFICATE_NAME
@@ -88,11 +109,140 @@ notarize_app() {
   rm -f "$NOTARIZATION_ZIP_PATH"
 }
 
+create_dmg_background() {
+  mkdir -p "$DMG_BACKGROUND_DIR"
+
+  python3 - "$DMG_BACKGROUND_PPM" <<'PY'
+import math
+import sys
+
+out_path = sys.argv[1]
+width = 700
+height = 440
+
+left = (11, 15, 26)
+right = (23, 46, 84)
+accent = (78, 225, 195)
+glow = (255, 186, 104)
+
+with open(out_path, "w", encoding="ascii") as f:
+    f.write(f"P3\n{width} {height}\n255\n")
+    for y in range(height):
+        row = []
+        for x in range(width):
+            mix = x / (width - 1)
+            base = [round(left[i] * (1 - mix) + right[i] * mix) for i in range(3)]
+
+            cx1, cy1 = width * 0.22, height * 0.32
+            d1 = math.hypot(x - cx1, y - cy1)
+            glow1 = max(0.0, 1.0 - d1 / 220.0)
+
+            cx2, cy2 = width * 0.78, height * 0.72
+            d2 = math.hypot(x - cx2, y - cy2)
+            glow2 = max(0.0, 1.0 - d2 / 190.0)
+
+            col = []
+            for i in range(3):
+                value = base[i]
+                value += accent[i] * (glow1 ** 2) * 0.55
+                value += glow[i] * (glow2 ** 2) * 0.35
+                value = max(0, min(255, round(value)))
+                col.append(str(value))
+            row.append(" ".join(col))
+        f.write(" ".join(row) + "\n")
+PY
+
+  sips -s format png "$DMG_BACKGROUND_PPM" --out "$DMG_BACKGROUND_PNG" >/dev/null
+  rm -f "$DMG_BACKGROUND_PPM"
+}
+
+customize_mounted_dmg() {
+  local mounted_background_path="$DMG_MOUNT_DIR/.background/background.png"
+
+  osascript <<EOF
+set dmgFolder to POSIX file "$DMG_MOUNT_DIR" as alias
+set bgFile to POSIX file "$mounted_background_path" as alias
+
+tell application "Finder"
+  activate
+  open dmgFolder
+  repeat 20 times
+    try
+      set dmgWindow to container window of dmgFolder
+      exit repeat
+    on error
+      delay 0.5
+    end try
+  end repeat
+
+  set dmgWindow to container window of dmgFolder
+  set current view of dmgWindow to icon view
+  set toolbar visible of dmgWindow to false
+  set statusbar visible of dmgWindow to false
+  set the bounds of dmgWindow to {140, 120, 840, 560}
+
+  set viewOptions to the icon view options of dmgWindow
+  set arrangement of viewOptions to not arranged
+  set icon size of viewOptions to 128
+  set text size of viewOptions to 14
+  set background picture of viewOptions to bgFile
+
+  set position of item "$APP_NAME" of dmgFolder to {180, 210}
+  set position of item "Applications" of dmgFolder to {520, 210}
+  update dmgFolder without registering applications
+  delay 1
+  close dmgWindow
+end tell
+EOF
+
+  DMG_CUSTOMIZED="true"
+}
+
+create_dmg() {
+  rm -rf "$DMG_DIR" "$DMG_MOUNT_DIR"
+  mkdir -p "$DMG_DIR" "$DMG_MOUNT_DIR"
+  cp -R "$APP_PATH" "$DMG_DIR/$APP_NAME"
+  ln -s /Applications "$APPLICATIONS_SYMLINK"
+  create_dmg_background
+
+  rm -f "$DMG_TEMP_PATH" "$DMG_PATH"
+  hdiutil create \
+    -volname "$DMG_VOLUME_NAME" \
+    -srcfolder "$DMG_DIR" \
+    -ov \
+    -format UDRW \
+    "$DMG_TEMP_PATH" >/dev/null
+
+  hdiutil attach \
+    -readwrite \
+    -noverify \
+    -noautoopen \
+    -mountpoint "$DMG_MOUNT_DIR" \
+    "$DMG_TEMP_PATH" >/dev/null
+
+  customize_mounted_dmg
+  sync
+  hdiutil detach "$DMG_MOUNT_DIR" -quiet
+  rm -rf "$DMG_MOUNT_DIR"
+
+  hdiutil convert "$DMG_TEMP_PATH" -format UDZO -imagekey zlib-level=9 -o "$DMG_PATH" >/dev/null
+}
+
+write_checksums() {
+  rm -f "$ZIP_CHECKSUM_PATH" "$DMG_CHECKSUM_PATH"
+  shasum -a 256 "$ZIP_PATH" | awk '{print $1}' > "$ZIP_CHECKSUM_PATH"
+  shasum -a 256 "$DMG_PATH" | awk '{print $1}' > "$DMG_CHECKSUM_PATH"
+}
+
 require_command xcodebuild
 require_command npm
 require_command shasum
+require_command hdiutil
+require_command osascript
+require_command sips
+require_command python3
 
-rm -rf "$BUILD_DIR" "$STAGE_DIR"
+rm -rf "$BUILD_DIR" "$STAGE_DIR" "$DMG_DIR" "$DMG_MOUNT_DIR"
 mkdir -p "$BUILD_DIR" "$SIGNALING_DIR" "$RELEASE_DIR"
 
 npm ci --prefix "$ROOT_DIR"
@@ -158,10 +308,14 @@ Notes:
 - If Gatekeeper blocks an unsigned build, use right click -> Open.
 EOF
 
-rm -f "$ZIP_PATH" "$CHECKSUM_PATH"
+rm -f "$ZIP_PATH" "$DMG_PATH"
 /usr/bin/ditto -c -k --sequesterRsrc --keepParent "$STAGE_DIR" "$ZIP_PATH"
-shasum -a 256 "$ZIP_PATH" | awk '{print $1}' > "$CHECKSUM_PATH"
+create_dmg
+write_checksums
 
 echo "Created: $ZIP_PATH"
-echo "Checksum: $CHECKSUM_PATH"
+echo "Created: $DMG_PATH"
+echo "Checksum: $ZIP_CHECKSUM_PATH"
+echo "Checksum: $DMG_CHECKSUM_PATH"
 echo "Bundle status: $BUNDLE_STATUS"
+echo "DMG customized: $DMG_CUSTOMIZED"
