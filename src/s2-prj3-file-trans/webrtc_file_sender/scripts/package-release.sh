@@ -23,6 +23,7 @@ fi
 
 VERSION="${TAG#v}"
 ARTIFACT_BASENAME="webrtc_file_sender-${VERSION}-macos"
+RELEASE_SUPPORT_DIR="$RELEASE_DIR/$ARTIFACT_BASENAME"
 ZIP_PATH="$RELEASE_DIR/$ARTIFACT_BASENAME.zip"
 ZIP_CHECKSUM_PATH="$RELEASE_DIR/$ARTIFACT_BASENAME.zip.sha256"
 DMG_PATH="$RELEASE_DIR/$ARTIFACT_BASENAME.dmg"
@@ -177,8 +178,12 @@ tell application "Finder"
 
   set dmgWindow to container window of dmgFolder
   set current view of dmgWindow to icon view
-  set toolbar visible of dmgWindow to false
-  set statusbar visible of dmgWindow to false
+  try
+    set toolbar visible of dmgWindow to false
+  end try
+  try
+    set statusbar visible of dmgWindow to false
+  end try
   set the bounds of dmgWindow to {140, 120, 840, 560}
 
   set viewOptions to the icon view options of dmgWindow
@@ -234,6 +239,63 @@ write_checksums() {
   shasum -a 256 "$DMG_PATH" | awk '{print $1}' > "$DMG_CHECKSUM_PATH"
 }
 
+populate_release_support_dir() {
+  rm -rf "$RELEASE_SUPPORT_DIR"
+  mkdir -p "$RELEASE_SUPPORT_DIR/signaling-server"
+
+  cp "$ROOT_DIR/signaling-server.js" "$RELEASE_SUPPORT_DIR/signaling-server/"
+  cp "$ROOT_DIR/package.json" "$ROOT_DIR/package-lock.json" "$RELEASE_SUPPORT_DIR/signaling-server/"
+  cp "$SIGNALING_DIR/start-signaling.command" "$RELEASE_SUPPORT_DIR/signaling-server/"
+
+  cat > "$RELEASE_SUPPORT_DIR/DEPLOY_SIGNALLING_SERVER.md" <<EOF
+# webrtc_file_sender signaling-server deployment guide
+
+Version: $VERSION
+
+## Directory contents
+- signaling-server/signaling-server.js
+- signaling-server/package.json
+- signaling-server/package-lock.json
+- signaling-server/start-signaling.command
+
+## Local deployment
+Use this when the signaling server runs on the same machine, or on a Mac in the same local network.
+
+1. Open Terminal
+2. Run:
+
+       cd "$(basename "$RELEASE_SUPPORT_DIR")/signaling-server"
+       npm ci
+       node signaling-server.js
+
+3. Keep the process running while both sender/receiver apps connect
+
+## Quick start on macOS
+- You can also double click `./start-signaling.command` from Finder.
+- The script runs `npm ci` and then starts `node signaling-server.js`.
+
+## Prerequisites for using the dmg-installed app
+1. `lib/mac/` in this repository must already contain the currently built WebRTC framework used by this project.
+2. You must deploy and start the local `signaling-server` before trying to connect peers.
+
+## Network notes
+- The default signaling server listens on the port defined in signaling-server.js.
+- Make sure both Macs can reach this host and port over the same network.
+- If macOS firewall prompts for Node.js access, choose Allow.
+
+## Production-style deployment suggestion
+- Copy the signaling-server/ folder to a dedicated host or Mac mini.
+- Install Node.js.
+- Run npm ci once.
+- Start with node signaling-server.js.
+- Keep it alive with tmux, screen, launchd, or another process manager.
+
+## App-side usage
+- In the app, point both peers to the same signaling server address.
+- After signaling succeeds, WebRTC handles the peer-to-peer data path directly.
+EOF
+}
+
 require_command xcodebuild
 require_command npm
 require_command shasum
@@ -242,7 +304,7 @@ require_command osascript
 require_command sips
 require_command python3
 
-rm -rf "$BUILD_DIR" "$STAGE_DIR" "$DMG_DIR" "$DMG_MOUNT_DIR"
+rm -rf "$BUILD_DIR" "$STAGE_DIR" "$DMG_DIR" "$DMG_MOUNT_DIR" "$RELEASE_SUPPORT_DIR"
 mkdir -p "$BUILD_DIR" "$SIGNALING_DIR" "$RELEASE_DIR"
 
 npm ci --prefix "$ROOT_DIR"
@@ -303,10 +365,16 @@ Quick start:
 2. Launch $APP_NAME on both Macs
 3. Keep both devices on the same signaling endpoint
 
+Also generated under dist/release:
+- $(basename "$RELEASE_SUPPORT_DIR")/signaling-server/
+- $(basename "$RELEASE_SUPPORT_DIR")/DEPLOY_SIGNALLING_SERVER.md
+
 Notes:
 - Signed/notarized output depends on release environment secrets.
 - If Gatekeeper blocks an unsigned build, use right click -> Open.
 EOF
+
+populate_release_support_dir
 
 rm -f "$ZIP_PATH" "$DMG_PATH"
 /usr/bin/ditto -c -k --sequesterRsrc --keepParent "$STAGE_DIR" "$ZIP_PATH"

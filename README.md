@@ -41,6 +41,13 @@ It includes:
 - local packaging scripts for `.zip` and `.dmg`
 - optional local signing / notarization support
 
+## Runtime prerequisites
+
+Before packaging, installing, or trying to run the app in this coursework setup, make sure these two prerequisites are satisfied:
+
+1. `lib/mac/` in this repository already contains the currently built WebRTC framework used by this project.
+2. The local `signaling-server` is deployed and running before peers try to connect.
+
 ## Local macOS packaging
 
 From the project directory:
@@ -62,6 +69,9 @@ Artifacts include:
 - `webrtc_file_sender-<version>-macos.zip.sha256`
 - `webrtc_file_sender-<version>-macos.dmg`
 - `webrtc_file_sender-<version>-macos.dmg.sha256`
+- `webrtc_file_sender-<version>-macos/`
+  - `DEPLOY_SIGNALLING_SERVER.md`
+  - `signaling-server/`
 
 The zip contains:
 - `webrtc_file_sender.app`
@@ -71,10 +81,22 @@ The zip contains:
 - `signaling-server/start-signaling.command`
 - `README.txt`
 
+Additionally, `dist/release/webrtc_file_sender-<version>-macos/` contains the release support files that are easier to browse directly in Finder:
+- `signaling-server/`
+- `DEPLOY_SIGNALLING_SERVER.md`
+
+Use that extra directory if you want to deploy the signaling server separately from the app bundle.
+
 The dmg contains:
 - `webrtc_file_sender.app`
 - an `Applications` shortcut for drag-install
 - a custom Finder background and icon layout for a more polished installer feel
+
+The dmg does **not** include the signaling server. The signaling server and deployment guide are provided in the extra release support directory and inside the zip bundle.
+
+Important prerequisites before the installed dmg app can actually run in this coursework setup:
+1. `lib/mac/` in this repository must already contain the currently built WebRTC framework used by this project.
+2. You must deploy and start the local `signaling-server` before trying to connect peers.
 
 The generated `.dmg` uses a styled Finder window and drag-to-Applications layout.
 
@@ -89,6 +111,10 @@ Download:
 
 Use the `.dmg` if you want the normal drag-to-Applications installation flow.
 
+Before the installed app can actually be used in this repository setup, make sure:
+1. `lib/mac/` already contains the currently built WebRTC framework required by the app.
+2. The local `signaling-server` is deployed and running.
+
 ### For users who also need the signaling bundle
 Download:
 - `webrtc_file_sender-<version>-macos.zip`
@@ -98,6 +124,12 @@ Use the `.zip` if you want:
 - the app bundle
 - the local signaling server
 - the packaged startup script for signaling
+
+This is usually the better artifact for this coursework, because it gives you both the app bundle and the signaling-server deployment files together.
+
+If you want the signaling server files directly in `dist/release/` without unzipping first, use:
+- `webrtc_file_sender-<version>-macos/signaling-server/`
+- `webrtc_file_sender-<version>-macos/DEPLOY_SIGNALLING_SERVER.md`
 
 ### Checksum verification
 If you want to verify an artifact after download:
