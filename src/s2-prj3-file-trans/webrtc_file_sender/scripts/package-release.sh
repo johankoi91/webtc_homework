@@ -196,7 +196,9 @@ tell application "Finder"
   set position of item "Applications" of dmgFolder to {520, 210}
   update dmgFolder without registering applications
   delay 1
-  close dmgWindow
+  try
+    close dmgWindow
+  end try
 end tell
 EOF
 
@@ -271,16 +273,16 @@ Use this when the signaling server runs on the same machine, or on a Mac in the 
 3. Keep the process running while both sender/receiver apps connect
 
 ## Quick start on macOS
-- You can also double click `./start-signaling.command` from Finder.
-- The script runs `npm ci` and then starts `node signaling-server.js`.
+- You can also double click ./start-signaling.command from Finder.
+- The script runs npm ci and then starts node signaling-server.js.
 
 ## Prerequisites for using the dmg-installed app
-1. `lib/mac/` in this repository must already contain the currently built WebRTC framework used by this project.
-2. You must deploy and start the local `signaling-server` before trying to connect peers.
+1. lib/mac/ in this repository must already contain the currently built WebRTC framework used by this project.
+2. You must deploy and start the local signaling-server before trying to connect peers.
 
 ## Network notes
 - The default signaling server listens on the port defined in signaling-server.js.
-- Make sure both Macs can reach this host and port over the same network.
+- Make sure both Macs can reach this host and port over the same local network.
 - If macOS firewall prompts for Node.js access, choose Allow.
 
 ## Production-style deployment suggestion
