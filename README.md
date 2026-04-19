@@ -67,32 +67,33 @@ src/s2-prj3-file-trans/webrtc_file_sender/dist/release/
 Artifacts include:
 - `webrtc_file_sender-<version>-macos.zip`
 - `webrtc_file_sender-<version>-macos.zip.sha256`
-- `webrtc_file_sender-<version>-macos.dmg`
-- `webrtc_file_sender-<version>-macos.dmg.sha256`
 - `webrtc_file_sender-<version>-macos/`
+  - `webrtc_file_sender-<version>-macos.dmg`
+  - `webrtc_file_sender-<version>-macos.dmg.sha256`
   - `DEPLOY_SIGNALLING_SERVER.md`
   - `signaling-server/`
 
 The zip contains:
-- `webrtc_file_sender.app`
-- `signaling-server/signaling-server.js`
-- `signaling-server/package.json`
-- `signaling-server/package-lock.json`
-- `signaling-server/start-signaling.command`
-- `README.txt`
+- `webrtc_file_sender-<version>-macos.dmg`
+- `DEPLOY_SIGNALLING_SERVER.md`
+- `signaling-server/`
 
-Additionally, `dist/release/webrtc_file_sender-<version>-macos/` contains the release support files that are easier to browse directly in Finder:
+This zip is now a release container for the macOS installer plus the signaling-server deployment materials.
+
+Additionally, `dist/release/webrtc_file_sender-<version>-macos/` contains the same release support files in directly browsable form:
+- `webrtc_file_sender-<version>-macos.dmg`
+- `webrtc_file_sender-<version>-macos.dmg.sha256`
 - `signaling-server/`
 - `DEPLOY_SIGNALLING_SERVER.md`
 
-Use that extra directory if you want to deploy the signaling server separately from the app bundle.
+Use that extra directory if you want to inspect or deploy the signaling server separately without unzipping the release archive first.
 
 The dmg contains:
 - `webrtc_file_sender.app`
 - an `Applications` shortcut for drag-install
 - a custom Finder background and icon layout for a more polished installer feel
 
-The dmg does **not** include the signaling server. The signaling server and deployment guide are provided in the extra release support directory and inside the zip bundle.
+The dmg does **not** include the signaling server inside the mounted installer view. The signaling server and deployment guide are provided alongside it inside the zip bundle and in the extra release support directory.
 
 Important prerequisites before the installed dmg app can actually run in this coursework setup:
 1. `lib/mac/` in this repository must already contain the currently built WebRTC framework used by this project.
@@ -105,9 +106,9 @@ The generated `.dmg` uses a styled Finder window and drag-to-Applications layout
 When a release is published on GitHub, prefer downloading these files from the `Releases` page:
 
 ### For normal macOS users
-Download:
-- `webrtc_file_sender-<version>-macos.dmg`
-- optionally `webrtc_file_sender-<version>-macos.dmg.sha256`
+Download or open from the release support directory:
+- `webrtc_file_sender-<version>-macos/webrtc_file_sender-<version>-macos.dmg`
+- optionally `webrtc_file_sender-<version>-macos/webrtc_file_sender-<version>-macos.dmg.sha256`
 
 Use the `.dmg` if you want the normal drag-to-Applications installation flow.
 
@@ -121,11 +122,11 @@ Download:
 - optionally `webrtc_file_sender-<version>-macos.zip.sha256`
 
 Use the `.zip` if you want:
-- the app bundle
-- the local signaling server
-- the packaged startup script for signaling
+- the macOS installer dmg
+- the deployment guide
+- the local signaling server files
 
-This is usually the better artifact for this coursework, because it gives you both the app bundle and the signaling-server deployment files together.
+This is usually the better artifact for this coursework, because it bundles the app installer together with the signaling-server deployment materials.
 
 If you want the signaling server files directly in `dist/release/` without unzipping first, use:
 - `webrtc_file_sender-<version>-macos/signaling-server/`
@@ -196,10 +197,14 @@ git push origin v1.0.0
 ```
 
 Then create a GitHub Release manually and upload:
-- `dist/release/webrtc_file_sender-1.0.0-macos.dmg`
-- `dist/release/webrtc_file_sender-1.0.0-macos.dmg.sha256`
 - `dist/release/webrtc_file_sender-1.0.0-macos.zip`
 - `dist/release/webrtc_file_sender-1.0.0-macos.zip.sha256`
+
+The zip already contains:
+- `webrtc_file_sender-1.0.0-macos/webrtc_file_sender-1.0.0-macos.dmg`
+- `webrtc_file_sender-1.0.0-macos/webrtc_file_sender-1.0.0-macos.dmg.sha256`
+- `webrtc_file_sender-1.0.0-macos/DEPLOY_SIGNALLING_SERVER.md`
+- `webrtc_file_sender-1.0.0-macos/signaling-server/`
 
 ## Manual GitHub Release steps
 

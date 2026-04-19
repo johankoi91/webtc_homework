@@ -26,10 +26,10 @@ ARTIFACT_BASENAME="webrtc_file_sender-${VERSION}-macos"
 RELEASE_SUPPORT_DIR="$RELEASE_DIR/$ARTIFACT_BASENAME"
 ZIP_PATH="$RELEASE_DIR/$ARTIFACT_BASENAME.zip"
 ZIP_CHECKSUM_PATH="$RELEASE_DIR/$ARTIFACT_BASENAME.zip.sha256"
-DMG_PATH="$RELEASE_DIR/$ARTIFACT_BASENAME.dmg"
-DMG_TEMP_PATH="$RELEASE_DIR/$ARTIFACT_BASENAME-temp.dmg"
-DMG_CHECKSUM_PATH="$RELEASE_DIR/$ARTIFACT_BASENAME.dmg.sha256"
-NOTARIZATION_ZIP_PATH="$RELEASE_DIR/$ARTIFACT_BASENAME-notarization.zip"
+DMG_PATH="$RELEASE_SUPPORT_DIR/$ARTIFACT_BASENAME.dmg"
+DMG_TEMP_PATH="$RELEASE_SUPPORT_DIR/$ARTIFACT_BASENAME-temp.dmg"
+DMG_CHECKSUM_PATH="$RELEASE_SUPPORT_DIR/$ARTIFACT_BASENAME.dmg.sha256"
+NOTARIZATION_ZIP_PATH="$RELEASE_SUPPORT_DIR/$ARTIFACT_BASENAME-notarization.zip"
 DMG_VOLUME_NAME="webrtc_file_sender ${VERSION}"
 DMG_BACKGROUND_DIR="$DMG_DIR/.background"
 DMG_BACKGROUND_PPM="$DMG_BACKGROUND_DIR/background.ppm"
@@ -307,7 +307,7 @@ require_command sips
 require_command python3
 
 rm -rf "$BUILD_DIR" "$STAGE_DIR" "$DMG_DIR" "$DMG_MOUNT_DIR" "$RELEASE_SUPPORT_DIR"
-mkdir -p "$BUILD_DIR" "$SIGNALING_DIR" "$RELEASE_DIR"
+mkdir -p "$BUILD_DIR" "$SIGNALING_DIR" "$RELEASE_DIR" "$RELEASE_SUPPORT_DIR"
 
 npm ci --prefix "$ROOT_DIR"
 
@@ -370,6 +370,7 @@ Quick start:
 Also generated under dist/release:
 - $(basename "$RELEASE_SUPPORT_DIR")/signaling-server/
 - $(basename "$RELEASE_SUPPORT_DIR")/DEPLOY_SIGNALLING_SERVER.md
+- $(basename "$DMG_PATH")
 
 Notes:
 - Signed/notarized output depends on release environment secrets.
@@ -378,9 +379,9 @@ EOF
 
 populate_release_support_dir
 
-rm -f "$ZIP_PATH" "$DMG_PATH"
-/usr/bin/ditto -c -k --sequesterRsrc --keepParent "$STAGE_DIR" "$ZIP_PATH"
+rm -f "$ZIP_PATH" "$DMG_PATH" "$DMG_CHECKSUM_PATH"
 create_dmg
+/usr/bin/ditto -c -k --sequesterRsrc --keepParent "$RELEASE_SUPPORT_DIR" "$ZIP_PATH"
 write_checksums
 
 echo "Created: $ZIP_PATH"
