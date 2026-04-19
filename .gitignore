@@ -21,3 +21,4 @@ rad.json
 #Test results file
 TestResults.xml
 /lib/mac/*
+!/lib/mac/.gitkeep
