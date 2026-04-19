@@ -4,10 +4,10 @@ This repository contains WebRTC and build-training homework projects.
 
 ## Quick navigation
 
-- `src/s2-prj3-file-trans/test_webrtc_mac_framework/`: main macOS WebRTC file transfer project
-- `src/s2-prj3-file-trans/test_webrtc_mac_framework/test_webrtc_mac_framework.xcodeproj`: Xcode project file
-- `src/s2-prj3-file-trans/test_webrtc_mac_framework/signaling-server.js`: local signaling server
-- `src/s2-prj3-file-trans/test_webrtc_mac_framework/scripts/package-release.sh`: local release packaging script
+- `src/s2-prj3-file-trans/webrtc_file_sender/`: main macOS WebRTC file transfer project
+- `src/s2-prj3-file-trans/webrtc_file_sender/webrtc_file_sender.xcodeproj`: Xcode project file
+- `src/s2-prj3-file-trans/webrtc_file_sender/signaling-server.js`: local signaling server
+- `src/s2-prj3-file-trans/webrtc_file_sender/scripts/package-release.sh`: local release packaging script
 - `src/s1/build_training/`: GN / Ninja learning exercises
 - `src/s1/gn_ninja/`: notes for the GN / Ninja training section
 - `include/`: shared headers / support files
@@ -24,19 +24,19 @@ Build system training content.
 ### `src/s2-prj3-file-trans/`
 Project work for WebRTC-based file transfer.
 
-- `src/s2-prj3-file-trans/test_webrtc_mac_framework/`: macOS app project root
-- `src/s2-prj3-file-trans/test_webrtc_mac_framework/test_webrtc_mac_framework/`: Objective-C / Cocoa app source files
-- `src/s2-prj3-file-trans/test_webrtc_mac_framework/test_webrtc_mac_framework.xcodeproj/`: Xcode project configuration
-- `src/s2-prj3-file-trans/test_webrtc_mac_framework/scripts/`: local packaging and release scripts
+- `src/s2-prj3-file-trans/webrtc_file_sender/`: macOS app project root
+- `src/s2-prj3-file-trans/webrtc_file_sender/webrtc_file_sender/`: Objective-C / Cocoa app source files
+- `src/s2-prj3-file-trans/webrtc_file_sender/webrtc_file_sender.xcodeproj/`: Xcode project configuration
+- `src/s2-prj3-file-trans/webrtc_file_sender/scripts/`: local packaging and release scripts
 
 ## Main project in this repository
 
 The primary app project is:
 
-- `src/s2-prj3-file-trans/test_webrtc_mac_framework/`
+- `src/s2-prj3-file-trans/webrtc_file_sender/`
 
 It includes:
-- a macOS app target: `test_webrtc_mac_framework.app`
+- a macOS app target: `webrtc_file_sender.app`
 - a local signaling server: `signaling-server.js`
 - local packaging scripts for `.zip` and `.dmg`
 - optional local signing / notarization support
@@ -46,7 +46,7 @@ It includes:
 From the project directory:
 
 ```bash
-cd src/s2-prj3-file-trans/test_webrtc_mac_framework
+cd src/s2-prj3-file-trans/webrtc_file_sender
 npm ci
 npm run release:package -- v1.0.0
 ```
@@ -54,17 +54,17 @@ npm run release:package -- v1.0.0
 This produces release artifacts under:
 
 ```bash
-src/s2-prj3-file-trans/test_webrtc_mac_framework/dist/release/
+src/s2-prj3-file-trans/webrtc_file_sender/dist/release/
 ```
 
 Artifacts include:
-- `test_webrtc_mac_framework-<version>-macos.zip`
-- `test_webrtc_mac_framework-<version>-macos.zip.sha256`
-- `test_webrtc_mac_framework-<version>-macos.dmg`
-- `test_webrtc_mac_framework-<version>-macos.dmg.sha256`
+- `webrtc_file_sender-<version>-macos.zip`
+- `webrtc_file_sender-<version>-macos.zip.sha256`
+- `webrtc_file_sender-<version>-macos.dmg`
+- `webrtc_file_sender-<version>-macos.dmg.sha256`
 
 The zip contains:
-- `test_webrtc_mac_framework.app`
+- `webrtc_file_sender.app`
 - `signaling-server/signaling-server.js`
 - `signaling-server/package.json`
 - `signaling-server/package-lock.json`
@@ -72,7 +72,7 @@ The zip contains:
 - `README.txt`
 
 The dmg contains:
-- `test_webrtc_mac_framework.app`
+- `webrtc_file_sender.app`
 - an `Applications` shortcut for drag-install
 - a custom Finder background and icon layout for a more polished installer feel
 
@@ -84,15 +84,15 @@ When a release is published on GitHub, prefer downloading these files from the `
 
 ### For normal macOS users
 Download:
-- `test_webrtc_mac_framework-<version>-macos.dmg`
-- optionally `test_webrtc_mac_framework-<version>-macos.dmg.sha256`
+- `webrtc_file_sender-<version>-macos.dmg`
+- optionally `webrtc_file_sender-<version>-macos.dmg.sha256`
 
 Use the `.dmg` if you want the normal drag-to-Applications installation flow.
 
 ### For users who also need the signaling bundle
 Download:
-- `test_webrtc_mac_framework-<version>-macos.zip`
-- optionally `test_webrtc_mac_framework-<version>-macos.zip.sha256`
+- `webrtc_file_sender-<version>-macos.zip`
+- optionally `webrtc_file_sender-<version>-macos.zip.sha256`
 
 Use the `.zip` if you want:
 - the app bundle
@@ -103,15 +103,15 @@ Use the `.zip` if you want:
 If you want to verify an artifact after download:
 
 ```bash
-shasum -a 256 test_webrtc_mac_framework-1.0.0-macos.dmg
-cat test_webrtc_mac_framework-1.0.0-macos.dmg.sha256
+shasum -a 256 webrtc_file_sender-1.0.0-macos.dmg
+cat webrtc_file_sender-1.0.0-macos.dmg.sha256
 ```
 
 Or for the zip:
 
 ```bash
-shasum -a 256 test_webrtc_mac_framework-1.0.0-macos.zip
-cat test_webrtc_mac_framework-1.0.0-macos.zip.sha256
+shasum -a 256 webrtc_file_sender-1.0.0-macos.zip
+cat webrtc_file_sender-1.0.0-macos.zip.sha256
 ```
 
 ## Local signed build
@@ -156,7 +156,7 @@ Recommended release steps:
 ```bash
 git checkout main
 git pull
-cd src/s2-prj3-file-trans/test_webrtc_mac_framework
+cd src/s2-prj3-file-trans/webrtc_file_sender
 npm ci
 npm run release:package -- v1.0.0
 git tag v1.0.0
@@ -164,10 +164,10 @@ git push origin v1.0.0
 ```
 
 Then create a GitHub Release manually and upload:
-- `dist/release/test_webrtc_mac_framework-1.0.0-macos.dmg`
-- `dist/release/test_webrtc_mac_framework-1.0.0-macos.dmg.sha256`
-- `dist/release/test_webrtc_mac_framework-1.0.0-macos.zip`
-- `dist/release/test_webrtc_mac_framework-1.0.0-macos.zip.sha256`
+- `dist/release/webrtc_file_sender-1.0.0-macos.dmg`
+- `dist/release/webrtc_file_sender-1.0.0-macos.dmg.sha256`
+- `dist/release/webrtc_file_sender-1.0.0-macos.zip`
+- `dist/release/webrtc_file_sender-1.0.0-macos.zip.sha256`
 
 ## Manual GitHub Release steps
 
@@ -175,7 +175,7 @@ Then create a GitHub Release manually and upload:
 2. Go to `Releases`.
 3. Click `Draft a new release`.
 4. Choose tag `v1.0.0`.
-5. Set title to `test_webrtc_mac_framework v1.0.0`.
+5. Set title to `webrtc_file_sender v1.0.0`.
 6. Upload the dmg, zip, and checksum files.
 7. Add release notes, for example:
 

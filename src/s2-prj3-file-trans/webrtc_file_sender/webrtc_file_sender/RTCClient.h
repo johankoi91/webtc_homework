@@ -1,6 +1,6 @@
 //
 //  RTCClient.h
-//  test_webrtc_mac_framework
+//  webrtc_file_sender
 //
 //  Created by hanxiaoqing on 2026/3/12.
 //

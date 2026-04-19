@@ -2,8 +2,8 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-PROJECT_PATH="$ROOT_DIR/test_webrtc_mac_framework.xcodeproj"
-SCHEME="test_webrtc_mac_framework"
+PROJECT_PATH="$ROOT_DIR/webrtc_file_sender.xcodeproj"
+SCHEME="webrtc_file_sender"
 CONFIGURATION="Release"
 BUILD_DIR="$ROOT_DIR/dist/build"
 STAGE_DIR="$ROOT_DIR/dist/stage"
@@ -11,7 +11,7 @@ RELEASE_DIR="$ROOT_DIR/dist/release"
 DMG_DIR="$ROOT_DIR/dist/dmg"
 DMG_MOUNT_DIR="$ROOT_DIR/dist/dmg-mount"
 SIGNALING_DIR="$STAGE_DIR/signaling-server"
-APP_NAME="test_webrtc_mac_framework.app"
+APP_NAME="webrtc_file_sender.app"
 APP_PATH="$STAGE_DIR/$APP_NAME"
 APP_SOURCE="$BUILD_DIR/DerivedData/Build/Products/$CONFIGURATION/$APP_NAME"
 
@@ -22,14 +22,14 @@ if [[ -z "$TAG" ]]; then
 fi
 
 VERSION="${TAG#v}"
-ARTIFACT_BASENAME="test_webrtc_mac_framework-${VERSION}-macos"
+ARTIFACT_BASENAME="webrtc_file_sender-${VERSION}-macos"
 ZIP_PATH="$RELEASE_DIR/$ARTIFACT_BASENAME.zip"
 ZIP_CHECKSUM_PATH="$RELEASE_DIR/$ARTIFACT_BASENAME.zip.sha256"
 DMG_PATH="$RELEASE_DIR/$ARTIFACT_BASENAME.dmg"
 DMG_TEMP_PATH="$RELEASE_DIR/$ARTIFACT_BASENAME-temp.dmg"
 DMG_CHECKSUM_PATH="$RELEASE_DIR/$ARTIFACT_BASENAME.dmg.sha256"
 NOTARIZATION_ZIP_PATH="$RELEASE_DIR/$ARTIFACT_BASENAME-notarization.zip"
-DMG_VOLUME_NAME="test_webrtc_mac_framework ${VERSION}"
+DMG_VOLUME_NAME="webrtc_file_sender ${VERSION}"
 DMG_BACKGROUND_DIR="$DMG_DIR/.background"
 DMG_BACKGROUND_PPM="$DMG_BACKGROUND_DIR/background.ppm"
 DMG_BACKGROUND_PNG="$DMG_BACKGROUND_DIR/background.png"

@@ -1,6 +1,6 @@
 //
 //  HXAirDropStyleTransferViewController.m
-//  test_webrtc_mac_framework
+//  webrtc_file_sender
 //
 //  Container VC: LocalSend-like sidebar + child panes.
 //

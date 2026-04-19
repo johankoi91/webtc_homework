@@ -1,6 +1,6 @@
 //
 //  AppDelegate.h
-//  test_webrtc_mac_framework
+//  webrtc_file_sender
 //
 //  Created by Peter Liu on 2026/3/2.
 //

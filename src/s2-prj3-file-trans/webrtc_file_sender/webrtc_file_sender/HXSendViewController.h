@@ -1,6 +1,6 @@
 //
 //  HXSendViewController.h
-//  test_webrtc_mac_framework
+//  webrtc_file_sender
 //
 //  Created by Cursor AI on 2026/3/17.
 //

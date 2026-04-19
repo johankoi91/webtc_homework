@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		8A7372C42F93F5BA0082959A /* WebRTC.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 8A7372C32F93F5BA0082959A /* WebRTC.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		8A7372C52F93F5BA0082959A /* WebRTC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A7372C32F93F5BA0082959A /* WebRTC.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,14 +26,14 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		4154CC642F559F3800CA280C /* test_webrtc_mac_framework.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = test_webrtc_mac_framework.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4154CC642F559F3800CA280C /* webrtc_file_sender.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = webrtc_file_sender.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8A7372C32F93F5BA0082959A /* WebRTC.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebRTC.framework; path = ../../../lib/mac/WebRTC.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		4154CC662F559F3800CA280C /* test_webrtc_mac_framework */ = {
+		4154CC662F559F3800CA280C /* webrtc_file_sender */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = test_webrtc_mac_framework;
+			path = webrtc_file_sender;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -42,6 +43,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8A7372C52F93F5BA0082959A /* WebRTC.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -52,7 +54,7 @@
 			isa = PBXGroup;
 			children = (
 				8A7372C32F93F5BA0082959A /* WebRTC.framework */,
-				4154CC662F559F3800CA280C /* test_webrtc_mac_framework */,
+				4154CC662F559F3800CA280C /* webrtc_file_sender */,
 				4154CC762F559F5400CA280C /* Frameworks */,
 				4154CC652F559F3800CA280C /* Products */,
 			);
@@ -61,7 +63,7 @@
 		4154CC652F559F3800CA280C /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				4154CC642F559F3800CA280C /* test_webrtc_mac_framework.app */,
+				4154CC642F559F3800CA280C /* webrtc_file_sender.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -76,9 +78,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		4154CC632F559F3800CA280C /* test_webrtc_mac_framework */ = {
+		4154CC632F559F3800CA280C /* webrtc_file_sender */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4154CC732F559F3A00CA280C /* Build configuration list for PBXNativeTarget "test_webrtc_mac_framework" */;
+			buildConfigurationList = 4154CC732F559F3A00CA280C /* Build configuration list for PBXNativeTarget "webrtc_file_sender" */;
 			buildPhases = (
 				4154CC602F559F3800CA280C /* Sources */,
 				4154CC612F559F3800CA280C /* Frameworks */,
@@ -90,13 +92,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				4154CC662F559F3800CA280C /* test_webrtc_mac_framework */,
+				4154CC662F559F3800CA280C /* webrtc_file_sender */,
 			);
-			name = test_webrtc_mac_framework;
+			name = webrtc_file_sender;
 			packageProductDependencies = (
 			);
-			productName = test_webrtc_framework;
-			productReference = 4154CC642F559F3800CA280C /* test_webrtc_mac_framework.app */;
+			productName = webrtc_file_sender;
+			productReference = 4154CC642F559F3800CA280C /* webrtc_file_sender.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -113,7 +115,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 4154CC5F2F559F3800CA280C /* Build configuration list for PBXProject "test_webrtc_mac_framework" */;
+			buildConfigurationList = 4154CC5F2F559F3800CA280C /* Build configuration list for PBXProject "webrtc_file_sender" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -127,7 +129,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				4154CC632F559F3800CA280C /* test_webrtc_mac_framework */,
+				4154CC632F559F3800CA280C /* webrtc_file_sender */,
 			);
 		};
 /* End PBXProject section */
@@ -281,6 +283,7 @@
 				DEVELOPMENT_TEAM = FXAXPRQ89M;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ONLY_ACTIVE_ARCH = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/../../../lib/mac/\"",
@@ -324,6 +327,7 @@
 				DEVELOPMENT_TEAM = FXAXPRQ89M;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ONLY_ACTIVE_ARCH = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/../../../lib/mac/\"",
@@ -359,7 +363,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		4154CC5F2F559F3800CA280C /* Build configuration list for PBXProject "test_webrtc_mac_framework" */ = {
+		4154CC5F2F559F3800CA280C /* Build configuration list for PBXProject "webrtc_file_sender" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4154CC712F559F3A00CA280C /* Debug */,
@@ -368,7 +372,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4154CC732F559F3A00CA280C /* Build configuration list for PBXNativeTarget "test_webrtc_mac_framework" */ = {
+		4154CC732F559F3A00CA280C /* Build configuration list for PBXNativeTarget "webrtc_file_sender" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4154CC742F559F3A00CA280C /* Debug */,
