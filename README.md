@@ -27,21 +27,19 @@ Inside that directory you will get:
 
 ### Quick run steps
 
-1. Make sure this repository already has the required WebRTC framework under `lib/mac/`.
-2. Open `webrtc_file_sender-1.0.0-macos/signaling-server/`.
-3. Start the signaling server:
+1. Open `webrtc_file_sender-1.0.0-macos/signaling-server/`.
+2. Start the signaling server:
 
 ```bash
 cd signaling-server
 ./start-signaling.command
 ```
 
-4. Keep the signaling server process running.
-5. Open `webrtc_file_sender-1.0.0-macos.dmg`.
-6. Drag `webrtc_file_sender.app` into `Applications`.
-7. Launch the app on both Macs.
-8. Make sure both peers point to the same local signaling server.
-
+3. Keep the signaling server process running.
+4. Open `webrtc_file_sender-1.0.0-macos.dmg`.
+5. Drag `webrtc_file_sender.app` into `Applications`.
+6. Launch the app on both Macs.
+7. Make sure both peers point to the same local signaling server.
 
 
 
